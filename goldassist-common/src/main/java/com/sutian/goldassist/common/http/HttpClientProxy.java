@@ -1,9 +1,11 @@
 package com.sutian.goldassist.common.http;
 
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.entity.GzipDecompressingEntity;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -13,10 +15,7 @@ import org.apache.http.util.EntityUtils;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -48,7 +47,6 @@ public class HttpClientProxy {
     }
 
     public static String doGet(String url, Map<String, String> headerMap,Map<String, String> map, String charset,Boolean isGzip){
-        HttpClient httpClient = null;
         HttpGet httpGet = null;
         String result = null;
         if (!CollectionUtils.isEmpty(map)) {
@@ -108,7 +106,7 @@ public class HttpClientProxy {
         if(gzip){
             StringBuffer sb = new StringBuffer();
             InputStream stream = response.getEntity().getContent();
-            InputStream dad = new GZIPInputStream(stream);
+            BufferedInputStream dad = new BufferedInputStream(stream);
             BufferedReader reader = new BufferedReader(new InputStreamReader(dad,charset));
             String line = "";
             while ((line = reader.readLine()) != null){

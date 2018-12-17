@@ -57,6 +57,11 @@
             <artifactId>httpclient</artifactId>
             <version>4.5</version>
         </dependency>
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+            <version>1.2.31</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -68,7 +73,6 @@
                 <configuration>
                     <source>1.8</source>
                     <target>1.8</target>
-                    <parameters>true</parameters>
                 </configuration>
             </plugin>
         </plugins>
