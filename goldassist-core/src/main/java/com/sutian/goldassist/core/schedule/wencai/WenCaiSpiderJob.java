@@ -7,6 +7,7 @@ import com.sun.javafx.binding.StringFormatter;
 import com.sutian.goldassist.common.http.HttpClientProxy;
 import com.sutian.goldassist.common.model.Gold;
 import com.sutian.goldassist.common.model.SpiderTask;
+import com.sutian.goldassist.common.util.HtmlUtil;
 import com.sutian.goldassist.core.Spider;
 import org.springframework.stereotype.Service;
 
@@ -31,18 +32,23 @@ public class WenCaiSpiderJob implements Spider<SpiderTask,Gold>{
 
 
     static {
-        questions.add("创投概念股");
-        questions.add("macd金叉");
+        questions.add("macd 大于-0.05 主板上市 市盈率大于10小于50 成交额大于1亿 股价大于6");
     }
 
     public static void main(String[] args) {
         WenCaiSpiderJob  job = new WenCaiSpiderJob();
-        job.spider();
+        List<String> codesList;
+        for(String q : questions){
+            codesList =  job.spider(q);
+            HtmlUtil.htmlToFile(codesList,q);
+        }
+
     }
-    public void spider(){
+    public List<String> spider(String q){
+        List<String> codesList = new ArrayList<>();
         Map<String,String> header = buildHeaderParams();
         Map<String,String> params = new HashMap<>();
-        params.put("w","科创概念股有哪些");
+        params.put("w",q);
         String rs = HttpClientProxy.doGet(TOKEN_URL,header,params,"utf-8",true);
         String token = JSON.parseObject(rs).getJSONObject("data").getJSONObject("wencai_data").getJSONObject("result").getString("token");
         String url = MessageFormat.format(GOLD_URL,token);
@@ -51,29 +57,16 @@ public class WenCaiSpiderJob implements Spider<SpiderTask,Gold>{
         JSONArray jsonArray = JSON.parseObject(dataRs).getJSONArray("result");
         for(int i=0;i<jsonArray.size();i++){
             JSONArray j = jsonArray.getJSONArray(i);
-            for(int k =0 ;k <j.size();k++){
-                System.out.println(j.getString(k));
-            }
-
-
+            String[] s = j.getString(0).split("\\.");
+            String code = s[1].toLowerCase() + s[0];
+            codesList.add(code);
         }
-        System.out.println(dataRs);
-
-
+        return codesList;
     }
 
     private Map<String, String> buildResParams() {
         Map<String,String> header = new HashMap<>();
-        header = (Map) JSONObject.parse("{\"Accept\": \"text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8\",\n" +
-                "\"Accept-Encoding\": \"gzip, deflate, br\",\n" +
-                "\"Accept-Language\": \"zh-CN,zh;q=0.9\",\n" +
-                "\"Cache-Control\": \"no-cache\",\n" +
-                "\"Connection\": \"keep-alive\",\n" +
-                "\"Cookie\": \"other_uid=Ths_iwencai_Xuangu_oydfix3fek1xy9ninxa77nf50e1wfvte; other_uname=latwm7te8r; cid=kjtmucutt0lde8a8teb9nhavq51508906604; ComputerID=kjtmucutt0lde8a8teb9nhavq51508906604; Hm_lvt_78c58f01938e4d85eaf619eae71b4ed1=1520582867; Hm_lvt_57a0e026e5e0e1e90bcea3f298e48e74=1520582867; PHPSESSID=4b472299ae25d8e7bb26a26c90fd2855; v=AuRV7b2ZZEH-opCNKCwe9hb0s-nVfQjnyqGcK_4FcK9yqYrfJo3YdxqxbLpN\",\n" +
-                "\"Host\": \"www.iwencai.com\",\n" +
-                "\"Pragma\": \"no-cache\",\n" +
-                "\"Upgrade-Insecure-Requests\": \"1\",\n" +
-                "\"User-Agent\": \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36\"}");
+        header = (Map) JSONObject.parse("{\"Connection\":\"keep-alive\",\"Pragma\":\"no-cache\",\"Cache-Control\":\"no-cache\",\"Upgrade-Insecure-Requests\":\"1\",\"User-Agent\":\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36\",\"Accept\":\"text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8\",\"Accept-Encoding\":\"gzip, deflate\",\"Accept-Language\":\"zh-CN,zh;q=0.9\",\"Cookie\":\"other_uid=Ths_iwencai_Xuangu_oydfix3fek1xy9ninxa77nf50e1wfvte; other_uname=latwm7te8r; cid=kjtmucutt0lde8a8teb9nhavq51508906604; ComputerID=kjtmucutt0lde8a8teb9nhavq51508906604; Hm_lvt_78c58f01938e4d85eaf619eae71b4ed1=1520582867; Hm_lvt_57a0e026e5e0e1e90bcea3f298e48e74=1520582867; PHPSESSID=4b472299ae25d8e7bb26a26c90fd2855; iwencaisearchquery=000703; v=AgW0zpSG9Zz9ANHA-SkPhY8jEko8wrlUA3adqAdqwTxLniu8zxLJJJPGrXmU\"}");
         return header;
 
     }
